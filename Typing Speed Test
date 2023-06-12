@@ -1,0 +1,84 @@
+import tkinter as tk  # Import the tkinter module and alias it as tk
+import random  # Import the random module
+import time  # Import the time module
+
+class TypingSpeedTest:
+    def __init__(self, master):
+        self.master = master  # Assign the root window to the instance variable master
+        self.master.title("Typing Speed Test")  # Set the title of the root window
+
+        self.sentence = ""  # Initialize an empty string for the sentence
+        self.user_input = ""  # Initialize an empty string for the user's input
+        self.start_time = 0  # Initialize the start_time variable to 0
+
+        self.label_sentence = tk.Label(self.master, text="Type the sentence below:")  # Create a label widget for the instruction
+        self.label_sentence.pack()  # Display the label widget on the window
+
+        self.text_sentence = tk.Text(self.master, height=5, width=50)  # Create a text widget for the sentence input
+        self.text_sentence.pack()  # Display the text widget on the window
+
+        self.label_result = tk.Label(self.master, text="")  # Create a label widget for the result
+        self.label_result.pack()  # Display the label widget on the window
+
+        self.button_start = tk.Button(self.master, text="Start", command=self.start_test)  # Create a button widget for starting the test
+        self.button_start.pack()  # Display the button widget on the window
+
+    def generate_sentence(self):
+        sentences = [  # Create a list of sentences
+            "The quick brown fox jumps over the lazy dog.",
+            "The cat in the hat.",
+            "Hello, world!",
+            "I am learning Python.",
+            "This is a typing speed test."
+        ]
+        self.sentence = random.choice(sentences)  # Select a random sentence from the list
+        self.text_sentence.delete("1.0", tk.END)  # Delete the existing content in the text widget
+        self.text_sentence.insert(tk.END, self.sentence)  # Insert the selected sentence into the text widget
+
+    def start_test(self):
+        self.generate_sentence()  # Generate a new sentence
+        self.text_sentence.config(state=tk.NORMAL)  # Enable editing in the text widget
+        self.text_sentence.delete("1.0", tk.END)  # Delete the existing content in the text widget
+        self.text_sentence.config(state=tk.DISABLED)  # Disable editing in the text widget
+        self.user_input = ""  # Reset the user's input
+        self.start_time = time.time()  # Record the current time as the start time
+        self.button_start.config(state=tk.DISABLED)  # Disable the start button
+        self.master.bind("<Key>", self.handle_input)  # Bind the handle_input method to key events
+
+    def handle_input(self, event):
+        if self.start_time == 0:  # If the test hasn't started yet, return
+            return
+
+        if event.char.isprintable():  # If the pressed key is printable (not a special key), add it to the user's input
+            self.user_input += event.char
+
+        if self.user_input == self.sentence:  # If the user's input matches the sentence, finish the test
+            self.finish_test()
+
+    def finish_test(self):
+        elapsed_time = time.time() - self.start_time  # Calculate the elapsed time
+        words_typed = len(self.user_input.split())  # Count the number of words typed by splitting the user's input
+        typing_speed = words_typed / (elapsed_time / 60) # Calculate the typing speed in words per minute
+        accuracy = self.calculate_accuracy() # Calculate the accuracy of the user's input
+
+        result_text = f"Time: {elapsed_time:.2f} seconds\n"  # Create a string with the elapsed time
+        result_text += f"Words typed: {words_typed}\n"  # Append the number of words typed
+        result_text += f"Typing speed: {typing_speed:.2f} words per minute\n"  # Append the typing speed
+        result_text += f"Accuracy: {accuracy:.2f}%"  # Append the accuracy percentage
+
+        self.label_result.config(text=result_text)  # Update the label widget with the result text
+        self.button_start.config(state=tk.NORMAL)  # Enable the start button
+        self.master.unbind("<Key>")  # Unbind the handle_input method from key events
+
+    def calculate_accuracy(self):
+        correct_chars = sum(a == b for a, b in zip(self.sentence,
+                                                   self.user_input))  # Count the number of correct characters by comparing each character in the sentence and the user's input
+        total_chars = max(len(self.sentence),
+                          len(self.user_input))  # Get the maximum length between the sentence and the user's input
+        accuracy = (correct_chars / total_chars) * 100  # Calculate the accuracy percentage
+        return accuracy
+
+
+root = tk.Tk() # Create the root window
+app = TypingSpeedTest(root) # Create an instance of the TypingSpeedTest class
+root.mainloop() # Start the main event loop
